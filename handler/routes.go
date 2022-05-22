@@ -20,7 +20,8 @@ func (h *Handler) Register(v1 *echo.Group) {
 	// orders routes
 	orders := api.Group("/orders")
 	orders.POST("/convert/:serial", h.OrdersConvertToEta)
-	orders.GET("", h.OrdersListByTransSerialAndConverted)
+	orders.GET("", h.OrdersListByTransSerialStoreConvertedDate)
+	// orders.GET("/post", h.PosOrdersListByStoreConvertedDate)
 	// orders.GET("/converted", h.OrdersListConverted)
 
 	// invoices routes
@@ -29,7 +30,7 @@ func (h *Handler) Register(v1 *echo.Group) {
 	invoices.POST("/post/:serial", h.InvoicePost)
 
 	// receipt routes
-	receipt := api.Group("/receipt")
+	receipt := api.Group("/receipts")
 	receipt.GET("", h.ReceiptsListByPosted)
 	receipt.POST("/post/:serial", h.ReceiptPost)
 

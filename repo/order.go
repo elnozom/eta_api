@@ -18,8 +18,8 @@ func NewOrderRepo(db *gorm.DB) OrderRepo {
 	}
 }
 
-func (ur *OrderRepo) ListUnConverted() (*[]model.Order, error) {
-	rows, err := ur.db.Raw("EXEC StkTr01ListUnConverted").Rows()
+func (ur *OrderRepo) ListByTransSerialStoreConvertedDate(req *model.ListOrdersRequest) (*[]model.Order, error) {
+	rows, err := ur.db.Raw("EXEC StkTr01ListByTransSerialStoreConvertedDate @transSerial = ? , @converted = ? , @storeCode = ?, @fromDate = ? , @toDate = ?", req.TransSerial, req.Status, req.Store, req.FromDate, req.ToDate).Rows()
 	if utils.CheckErr(&err) {
 		return nil, err
 	}
@@ -31,8 +31,8 @@ func (ur *OrderRepo) ListUnConverted() (*[]model.Order, error) {
 	return result, nil
 }
 
-func (ur *OrderRepo) ListByTransSerialAndConverted(req *model.ListOrdersRequest) (*[]model.Order, error) {
-	rows, err := ur.db.Raw("EXEC StkTr01ListByTransSerialAndConverted @TransSerial = ? , @Converted = ? , @StoreCode = ?", req.TransSerial, req.Status, req.Store).Rows()
+func (ur *OrderRepo) ListPosByStoreConvertedDate(req *model.ListPosOrdersRequest) (*[]model.Order, error) {
+	rows, err := ur.db.Raw("EXEC StkTr03ListByStoreConvertedDate  @converted = ? , @storeCode = ? , @fromDate = ? , @toDate = ?", req.Status, req.Store, req.FromDate, req.ToDate).Rows()
 	if utils.CheckErr(&err) {
 		return nil, err
 	}
@@ -44,7 +44,7 @@ func (ur *OrderRepo) ListByTransSerialAndConverted(req *model.ListOrdersRequest)
 	return result, nil
 }
 
-func (ur *OrderRepo) ConvertToEta(serial *int64) (*int, error) {
+func (ur *OrderRepo) ConvertToEtaInvoice(serial *int64) (*int, error) {
 	var resp int
 	err := ur.db.Raw("EXEC StkTr01ConvertInvoice @Serial = ? ", serial).Row().Scan(&resp)
 	if utils.CheckErr(&err) {

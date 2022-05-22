@@ -69,20 +69,37 @@ ALTER PROCEDURE StkTrEInvoiceFindItems(@serial INT)
 
     SELECT itemType , itemCode , unitType , quantity , unitValue ,totalTaxableFees ,itemsDiscount, (quantity * unitValue) salesTotal , ((quantity * unitValue) + totalTaxableFees) total  , ((quantity * unitValue) + totalTaxableFees - itemsDiscount) netTotal  FROM StkTrEInvoiceDetails WHERE headSerial = @serial
 END
-
-
-
 GO
 ALTER PROCEDURE StkTrEInvoiceFindRecieverAddress(@accountSerial INT)
 	AS
     BEGIN
         SELECT ad.* , acc.AccountName , acc.EtaType , acc.EtaId FROM  EtaAddresses ad  JOIN AccMs01 acc ON acc.AddressSerial = ad.Serial WHERE acc.Serial = @accountSerial
     END
-
-
 GO
 ALTER PROCEDURE StkTrEInvoiceFindIssuerAddress(@storeCode INT)
 	AS
     BEGIN
         SELECT ad.* FROM  EtaAddresses ad JOIN StoreCode st ON st.AddressSerial = ad.Serial WHERE st.StoreCode = @storeCode
     END
+
+
+
+
+GO
+ALTER PROCEDURE [dbo].[StkTr01ListByTransSerialAndConverted] (@TransSerial INT , @Converted SMALLINT = -1 , @StoreCode INT = 0 )
+	AS
+    BEGIN
+        SELECT  o.Serial ,  o.DocNo ,  o.DocDate ,  ISNULL(o.Discount , 0) Discount  ,  o.TotalCash ,
+			  ISNULL(o.TotalTax , 0) TotalTax    
+	    FROM StkTr01 o 
+		WHERE o.TotalCash IS NOT NULL 
+		AND ISNULL(EtaConverted , 0) = CASE WHEN @Converted = -1 THEN ISNULL(EtaConverted , 0) ELSE  @Converted END 
+		AND TransSerial = @TransSerial
+		AND StoreCode = CASE WHEN @StoreCode = 0 THEN StoreCode ELSE @StoreCode END
+    END
+
+
+
+
+
+
