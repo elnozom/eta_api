@@ -3,7 +3,6 @@ package handler
 import (
 	"eta/model"
 	"eta/utils"
-	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -25,21 +24,14 @@ func (h *Handler) Login(c echo.Context) error {
 	if err := c.Bind(req); err != nil {
 		return c.JSON(http.StatusUnprocessableEntity, utils.NewError(err))
 	}
-
-	fmt.Println("req")
-	fmt.Println(req)
 	r := new(model.UserResponse)
 	u, err := h.userRepo.GetByCode(&req.Username)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, utils.NewError(err))
-	}
-	if u == nil {
+
+	if err != nil || u == nil {
 		return c.JSON(http.StatusForbidden, "incorrect_uname")
 	}
-	fmt.Println(u.EmpPassword)
-	fmt.Println(req.Password)
 	if u.EmpPassword != req.Password {
-		return c.JSON(http.StatusForbidden, "wrong_password")
+		return c.JSON(http.StatusBadRequest, "wrong_password")
 	}
 	r.User = *u
 	r.Token = utils.GenerateJWT(uint(u.EmpCode))

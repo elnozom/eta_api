@@ -1,8 +1,8 @@
 package model
 
 type UserLoginRequest struct {
-	Username uint
-	Password string
+	Username uint   `json:"username"`
+	Password string `json:"password"`
 }
 
 type UserResponse struct {
