@@ -8,7 +8,7 @@ ALTER PROCEDURE StkTr01ListByTransSerialStoreConvertedDate (@transSerial INT , @
 	AS
     BEGIN
         SELECT  o.Serial ,  o.DocNo ,  o.DocDate ,  ISNULL(o.Discount , 0) Discount  ,  o.TotalCash ,
-			  ISNULL(o.TotalTax , 0) TotalTax    
+			  ISNULL(o.TotalTax , 0) TotalTax  , ISNULL(o.EtaConverted , 0) EtaConverted
 	    FROM StkTr01 o 
 		WHERE o.TotalCash IS NOT NULL 
 		AND ISNULL(EtaConverted , 0) = CASE WHEN @Converted IS NULL THEN ISNULL(EtaConverted , 0) ELSE  @Converted END 

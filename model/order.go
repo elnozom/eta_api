@@ -1,12 +1,13 @@
 package model
 
 type Order struct {
-	Serial    int     `json:"serial"`
-	DocNo     string  `json:"docNo"`
-	DocDate   string  `json:"docDate"`
-	Discount  float64 `json:"discount"`
-	TotalCash float64 `json:"totalCash"`
-	TotalTax  float64 `json:"totalTax"`
+	Serial       int     `json:"serial"`
+	DocNo        string  `json:"docNo"`
+	DocDate      string  `json:"docDate"`
+	Discount     float64 `json:"discount"`
+	TotalCash    float64 `json:"totalCash"`
+	TotalTax     float64 `json:"totalTax"`
+	EtaConverted bool    `json:"etaConverted"`
 }
 type EInvoice struct {
 	Serial              int     `json:"serial"`

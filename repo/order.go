@@ -57,7 +57,7 @@ func scanOrderResult(rows *sql.Rows) (*[]model.Order, error) {
 	var resp []model.Order
 	for rows.Next() {
 		var rec model.Order
-		err := rows.Scan(&rec.Serial, &rec.DocNo, &rec.DocDate, &rec.Discount, &rec.TotalCash, &rec.TotalTax)
+		err := rows.Scan(&rec.Serial, &rec.DocNo, &rec.DocDate, &rec.Discount, &rec.TotalCash, &rec.TotalTax, &rec.EtaConverted)
 		if utils.CheckErr(&err) {
 			return nil, err
 		}
