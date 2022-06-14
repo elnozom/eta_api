@@ -3,6 +3,7 @@ package handler
 import (
 	"eta/model"
 	"eta/utils"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -10,7 +11,9 @@ import (
 )
 
 func (h *Handler) InvoicesListByPosted(c echo.Context) error {
-	postedFilter, _ := strconv.ParseBool(c.QueryParam("posted"))
+	postedFilter, _ := strconv.ParseBool(c.QueryParam("active"))
+	fmt.Println("postedFilter")
+	fmt.Println(postedFilter)
 	result, err := h.invoiceRepo.ListEInvoicesByPosted(&postedFilter)
 	utils.CheckErr(&err)
 	return c.JSON(http.StatusOK, result)
@@ -26,5 +29,14 @@ func (h *Handler) InvoicePost(c echo.Context) error {
 	invoice.DocumentTypeVersion = "1.0"
 	invoice.DocumentType = "I"
 
+	// invoiceJson, err := json.Marshal(invoice)
+	// covertedJson, err := json.MarshalCanonical(invoiceJson)
+
+	// fmt.Println(covertedJson)
+	// targetsJSON, err := json.MarshalCanonical(targets)
+	// if err != nil {
+	// 	logrus.Debug("Error Marshalling Targets")
+	// 	return nil, err
+	// }
 	return c.JSON(http.StatusOK, invoice)
 }
