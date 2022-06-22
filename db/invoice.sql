@@ -59,3 +59,40 @@ ALTER PROCEDURE StkTr01ConvertInvoice (@Serial INT)
 		SELECT SCOPE_IDENTITY() id
     END
 
+
+GO
+ALTER PROCEDURE StkTr03ConvertInvoice (@Serial INT)
+	AS
+    BEGIN
+        DECLARE @internalID INT
+		DECLARE @transSerial INT
+        DECLARE @storeCode int
+        DECLARE @dateTimeIssued datetime
+        DECLARE @totalDiscountAmount REAL
+        DECLARE @totalAmount REAL
+        DECLARE @totalTax REAL
+        DECLARE @accountSerial int
+		DECLARE @headSerial int
+				
+        SELECT  
+                @storeCode = StoreCode , 
+                @dateTimeIssued = DocDate , 
+                @totalDiscountAmount = Discount , 
+                @totalAmount = TotalCash , 
+                @totalTax = ISNULL(SaleTax , 0)  , 
+                @accountSerial = AccountSerial FROM StkTr03 WHERE Serial = @Serial
+
+		SET @internalID = (SELECT ISNULL(MAX(internalID) , 1) FROM StkTrEInvoiceHead WHERE storeCode = @storeCode AND TransSerial = @transSerial)
+        INSERT INTO StkTrEInvoiceHead (internalID , TransSerial ,storeCode ,dateTimeIssued ,totalDiscountAmount ,totalAmount ,totalTax ,stkTr01Serial ,accountSerial)
+        VALUES (@internalID ,25 ,@storeCode ,@dateTimeIssued ,@totalDiscountAmount ,@totalAmount ,@totalTax ,@Serial ,@accountSerial)
+
+        SET @headSerial = SCOPE_IDENTITY();
+
+        INSERT INTO StkTrEInvoiceDetails ( headSerial , itemCode  , unitValue , quantity , totalTaxableFees , itemsDiscount , itemSerial , storeCode )
+        SELECT @headSerial , ISNULL(BarCodeUsed, '123') , Price , Qnt , Tax , ISNULL(Discount,0 ), ItemSerial , @storeCode
+        FROM    StkTr04 o WHERE HeadSerial = @Serial  
+
+		
+		SELECT SCOPE_IDENTITY() id
+    END
+

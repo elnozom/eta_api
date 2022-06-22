@@ -10,14 +10,14 @@ import (
 )
 
 func (h *Handler) ReceiptsListByPosted(c echo.Context) error {
-	resp, err := utils.SubmitInvoice()
-	if utils.CheckErr(&err) {
-		return c.JSON(http.StatusOK, err.Error())
-	}
-	// postedFilter, _ := strconv.ParseBool(c.QueryParam("posted"))
-	// result, err := h.receiptRepo.ListReceiptsByPosted(&postedFilter)
-	// utils.CheckErr(&err)
-	return c.JSON(http.StatusOK, resp)
+	// resp, err := utils.SubmitInvoice()
+	// if utils.CheckErr(&err) {
+	// 	return c.JSON(http.StatusOK, err.Error())
+	// }
+	// // postedFilter, _ := strconv.ParseBool(c.QueryParam("posted"))
+	// // result, err := h.receiptRepo.ListReceiptsByPosted(&postedFilter)
+	// // utils.CheckErr(&err)
+	return c.JSON(http.StatusOK, "resp")
 }
 
 func (h *Handler) ReceiptPost(c echo.Context) error {

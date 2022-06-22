@@ -72,6 +72,10 @@ type Invoice struct {
 	NetAmount                float64       `json:"netAmount"`
 }
 
+type InvoiceSubmitRequest struct {
+	Documents []Invoice `json:"documents"`
+}
+
 type InvoiceFindResp struct {
 	Serial                   int
 	DateTimeIssued           string

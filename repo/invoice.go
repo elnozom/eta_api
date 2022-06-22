@@ -18,8 +18,8 @@ func NewInvoiceRepo(db *gorm.DB) InvoiceRepo {
 	}
 }
 
-func (ur *InvoiceRepo) ListEInvoicesByPosted(posted *bool) (*[]model.EInvoice, error) {
-	rows, err := ur.db.Raw("EXEC StkTrEInvoiceHeadList @posted = ? ", posted).Rows()
+func (ur *InvoiceRepo) ListEInvoicesByPosted(posted *bool, store *int) (*[]model.EInvoice, error) {
+	rows, err := ur.db.Raw("EXEC StkTrEInvoiceHeadList @posted = ? , @store = ?  ", posted, store).Rows()
 	utils.CheckErr(&err)
 	defer rows.Close()
 	if utils.CheckErr(&err) {
