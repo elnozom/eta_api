@@ -30,7 +30,7 @@ func (ur *UserRepo) GetByCode(code *uint) (*model.User, error) {
 
 func scanUserResult(row *sql.Row) (*model.User, error) {
 	var user model.User
-	err := row.Scan(&user.EmpName, &user.EmpPassword, &user.EmpCode, &user.SecLevel, &user.FixEmpStore)
+	err := row.Scan(&user.EmpName, &user.EmpPassword, &user.EmpCode, &user.SecLevel)
 	if err != nil {
 		return nil, err
 	}

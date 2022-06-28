@@ -30,11 +30,11 @@ type Header struct {
 	Currency       string `json:"currency"`
 }
 type Seller struct {
-	Rin                string          `json:"rin"`
-	CompanyTradeName   string          `json:"companyTradeName"`
-	BranchCode         string          `json:"branchCode"`
-	BranchAddress      RecieverAddress `json:"branchAddress"`
-	DeviceSerialNumber string          `json:"deviceSerialNumber"`
+	Rin              string `json:"rin"`
+	CompanyTradeName string `json:"companyTradeName"`
+	BranchCode       string `json:"branchCode"`
+	// BranchAddress      RecieverAddress `json:"branchAddress"`
+	DeviceSerialNumber string `json:"deviceSerialNumber"`
 }
 type Buyer struct {
 	Type string `json:"type"`

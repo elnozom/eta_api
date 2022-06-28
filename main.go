@@ -21,12 +21,18 @@ func main() {
 	invoiceRepo := repo.NewInvoiceRepo(db)
 	receiptRepo := repo.NewReceiptRepo(db)
 	storeRepo := repo.NewStoreRepo(db)
+	companyRepo := repo.NewCompanyRepo(db)
+	companyInfo, err := companyRepo.Find()
+	if err != nil {
+		panic(err)
+	}
 	h := handler.NewHandler(
 		userRepo,
 		orderRepo,
 		invoiceRepo,
 		receiptRepo,
 		storeRepo,
+		companyInfo,
 	)
 	h.Register(v1)
 	port := fmt.Sprintf(":%s", config.Config("PORT"))

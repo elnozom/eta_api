@@ -26,7 +26,6 @@ func (h *Handler) Login(c echo.Context) error {
 	}
 	r := new(model.UserResponse)
 	u, err := h.userRepo.GetByCode(&req.Username)
-
 	if err != nil || u == nil {
 		return c.JSON(http.StatusForbidden, "incorrect_uname")
 	}

@@ -1,16 +1,13 @@
 package handler
 
 import (
-	"eta/router/middleware"
-	"eta/utils"
-
 	"github.com/labstack/echo/v4"
 )
 
 func (h *Handler) Register(v1 *echo.Group) {
-	jwtMiddleware := middleware.JWT(utils.JWTSecret)
+	// jwtMiddleware := middleware.JWT(utils.JWTSecret)
 	v1.GET("/health", h.CheckHealth)
-	api := v1.Group("/api", jwtMiddleware)
+	api := v1.Group("/api")
 	api.GET("/validate", h.ValidateUser)
 	//auth routes
 	v1.POST("api/login", h.Login)
@@ -25,8 +22,8 @@ func (h *Handler) Register(v1 *echo.Group) {
 
 	// invoices routes
 	invoices := api.Group("/invoices")
-	invoices.GET("", h.InvoicesListByStorePosted)
-	invoices.POST("/post/:serial", h.InvoicePost)
+	invoices.GET("", h.InvoicesList)
+	invoices.POST("/post", h.InvoicePost)
 
 	// receipt routes
 	receipt := api.Group("/receipts")
