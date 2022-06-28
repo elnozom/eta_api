@@ -138,8 +138,11 @@ func roundFloat(val float64, precision uint) float64 {
 // 	TotalAmount              float64       `json:"totalAmount"`
 // 	TaxTotals                []TaxTotals   `json:"taxTotals"`
 // }
-
-func _loadCompnayInfoIntoInvoice(info *model.CompanyInfo, invoice *model.Invoice) {
+func _removeTax(value *float64) float64 {
+	val := *value / 1.14
+	return _roundFloat(&val, 5)
+}
+func _prepareInvoice(info *model.CompanyInfo, invoice *model.Invoice) {
 	invoice.Issuer.Id = info.EtaRegistrationId
 	invoice.Issuer.Type = info.EtaType
 	invoice.TaxpayerActivityCode = info.EtaActivityCode
@@ -147,18 +150,23 @@ func _loadCompnayInfoIntoInvoice(info *model.CompanyInfo, invoice *model.Invoice
 	invoice.Receiver.Type = "P"
 	invoice.DocumentType = "I"
 	invoice.DocumentTypeVersion = "1.0"
+	tax := model.TaxTotals{TaxType: "T1", Amount: 0}
+	invoice.TaxTotals = append(invoice.TaxTotals, tax)
+	invoice.NetAmount = _removeTax(&invoice.TotalAmount)
+	invoice.TotalSalesAmount = invoice.NetAmount
+
 }
-func _roundFloat(val *float64, precision uint) *float64 {
+func _roundFloat(val *float64, precision uint) float64 {
 	ratio := math.Pow(10, float64(precision))
 	roundedValue := math.Round(*val*ratio) / ratio
-	return &roundedValue
+	return roundedValue
 }
 func _prepareInvoiceItem(item *model.InvoiceLine) {
-	item.NetTotal = item.Total
+	item.NetTotal = item.SalesTotal
 	item.UnitValue.CurrencySold = "EGP"
 	taxAmount := item.SalesTotal * .14
 	taxAmountRounded := _roundFloat(&taxAmount, 5)
-	tax := model.TaxableItems{TaxType: "T1", Amount: *taxAmountRounded, SubType: " ", Rate: 14}
+	tax := model.TaxableItems{TaxType: "T1", Amount: taxAmountRounded, SubType: " ", Rate: 14}
 	item.TaxableItems = append(item.TaxableItems, tax)
 	// item.UnitValue.TaxableItems.Ta = "EGP"
 }
@@ -188,7 +196,7 @@ func (ur *InvoiceRepo) FindInvoiceData(req *model.PostInvoicessRequest, companyI
 		if utils.CheckErr(&err) {
 			return nil, err
 		}
-		_loadCompnayInfoIntoInvoice(companyInfo, &rec)
+		_prepareInvoice(companyInfo, &rec)
 		invoices = append(invoices, rec)
 	}
 	err = ur.db.ScanRows(rows, &invoices)
@@ -202,6 +210,7 @@ func (ur *InvoiceRepo) FindInvoiceData(req *model.PostInvoicessRequest, companyI
 			// var head int
 			err := rows.Scan(
 				&headSerial,
+				&rec.Description,
 				&rec.ItemType,
 				&rec.ItemCode,
 				&rec.UnitType,
@@ -220,7 +229,7 @@ func (ur *InvoiceRepo) FindInvoiceData(req *model.PostInvoicessRequest, companyI
 				counter++
 			}
 			invoices[counter].InvoiceLines = append(invoices[counter].InvoiceLines, rec)
-
+			invoices[counter].TaxTotals[0].Amount += rec.TaxableItems[0].Amount
 		}
 	}
 	return &invoices, nil
