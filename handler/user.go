@@ -8,6 +8,13 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+func (h *Handler) Test(c echo.Context) error {
+	req := new(model.InvoiceSubmitRequest)
+	if err := c.Bind(req); err != nil {
+		return c.JSON(http.StatusUnprocessableEntity, utils.NewError(err))
+	}
+	return c.JSON(http.StatusOK, req)
+}
 func (h *Handler) ValidateUser(c echo.Context) error {
 	return c.JSON(http.StatusOK, true)
 }

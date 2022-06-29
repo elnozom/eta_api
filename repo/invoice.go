@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"eta/model"
 	"eta/utils"
+	"fmt"
 	"math"
 
 	"github.com/jinzhu/gorm"
@@ -144,6 +145,8 @@ func _removeTax(value *float64) float64 {
 }
 func _prepareInvoice(info *model.CompanyInfo, invoice *model.Invoice) {
 	invoice.Issuer.Id = info.EtaRegistrationId
+	internalID := fmt.Sprintf("%s-%d-%s", invoice.InternalID, invoice.Serial, invoice.Issuer.Address.BranchId)
+	invoice.InternalID = internalID
 	invoice.Issuer.Type = info.EtaType
 	invoice.TaxpayerActivityCode = info.EtaActivityCode
 	invoice.Issuer.Name = info.ComName
@@ -230,6 +233,7 @@ func (ur *InvoiceRepo) FindInvoiceData(req *model.PostInvoicessRequest, companyI
 			}
 			invoices[counter].InvoiceLines = append(invoices[counter].InvoiceLines, rec)
 			invoices[counter].TaxTotals[0].Amount += rec.TaxableItems[0].Amount
+			invoices[counter].TaxTotals[0].Amount = _roundFloat(&invoices[counter].TaxTotals[0].Amount, 5)
 		}
 	}
 	return &invoices, nil
