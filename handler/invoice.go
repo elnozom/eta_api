@@ -29,9 +29,9 @@ func (h *Handler) InvoicePost(c echo.Context) error {
 	if utils.CheckErr(&err) {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-	// _, err = utils.SignInvoices(invoices)
-	// if err := c.Bind(req); err != nil {
-	// 	return c.JSON(http.StatusInternalServerError, utils.NewError(err))
-	// }
+	_, err = utils.SignInvoices(invoices)
+	if err := c.Bind(req); err != nil {
+		return c.JSON(http.StatusInternalServerError, utils.NewError(err))
+	}
 	return c.JSON(http.StatusOK, invoices)
 }

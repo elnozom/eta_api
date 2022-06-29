@@ -1,7 +1,6 @@
 package router
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -12,11 +11,6 @@ import (
 func New() *echo.Echo {
 	e := echo.New()
 	fs := http.FileServer(http.Dir("assets"))
-	e.Use(middleware.BodyDump(func(c echo.Context, reqBody, resBody []byte) {
-		fmt.Println("reqBody")
-		fmt.Println(string(reqBody))
-
-	}))
 
 	e.GET("/assets/*", echo.WrapHandler(http.StripPrefix("/assets/", fs)))
 
