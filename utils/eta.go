@@ -3,6 +3,7 @@ package utils
 import (
 	"bytes"
 	"encoding/json"
+	"eta/config"
 	"eta/model"
 	"fmt"
 	"io/ioutil"
@@ -43,39 +44,11 @@ func EtaLogin() (string, error) {
 	return response.AccessToken, nil
 }
 
-func SignDocument(document model.Invoice) (*model.InvoiceSubmitRequest, error) {
-	// client := &http.Client{}
-	// apiUrl := "http://localhost:45140/"
-	// resource := "/sign"
-	// stringInvoice, err := json.Marshal(document)
-	// if err != nil {
-	//   return nil, err
-	// }
-	// data := []byte(string(stringInvoice))
-	// // data.Set("client_id", "c70450b9-5b89-48dd-be15-9cf7629f7dd1")
-	// // data.Set("client_secret", "7825b824-841c-4f1a-81cd-d8eb60745ee6")
-	// // data.Set("grant_type", "client_credentials")
-	// u, _ := url.ParseRequestURI(apiUrl)
-	// u.Path = resource
-	// urlStr := u.String()
-
-	// fmt.Println(urlStr)
-	// r, err := http.NewRequest(http.MethodPost, urlStr, bytes.NewBuffer(data)) // URL-encoded payload
-	// if err != nil {
-	//   return nil, err
-	// }
-	// r.Header.Add("Content-Type", "application/json")
-	// resp, err := client.Do(r)
-	// if err != nil {
-	//   return nil, err
-	// }
-	// fmt.Println(resp)
-
+func SignInvoices(invoices *[]model.Invoice) (*model.InvoiceSubmitRequest, error) {
 	var doc model.InvoiceSubmitRequest
-	jsonValue, _ := json.Marshal(document)
+	jsonValue, _ := json.Marshal(invoices)
 
-	resp, err := http.Post("http://localhost:45140/sign", "application/json", bytes.NewBuffer(jsonValue))
-	fmt.Println("resp")
+	resp, err := http.Post(config.Config("SIGNER_URL")+"sign", "application/json", bytes.NewBuffer(jsonValue))
 	if err != nil {
 		return nil, err
 	}
@@ -85,8 +58,6 @@ func SignDocument(document model.Invoice) (*model.InvoiceSubmitRequest, error) {
 	}
 	err = json.Unmarshal(d, &doc)
 	if err != nil {
-		fmt.Println("marshal error")
-		fmt.Println(err.Error())
 		return nil, err
 	}
 	resp.Body.Close()

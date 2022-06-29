@@ -25,9 +25,10 @@ func (h *Handler) InvoicePost(c echo.Context) error {
 	if err := c.Bind(req); err != nil {
 		return c.JSON(http.StatusUnprocessableEntity, utils.NewError(err))
 	}
-	invoice, err := h.invoiceRepo.FindInvoiceData(req, h.companyInfo)
+	invoices, err := h.invoiceRepo.FindInvoiceData(req, h.companyInfo)
 	if utils.CheckErr(&err) {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, invoice)
+	submitInvoices, err := utils.SignInvoices(invoices)
+	return c.JSON(http.StatusOK, submitInvoices)
 }
