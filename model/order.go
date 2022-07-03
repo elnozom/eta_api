@@ -15,6 +15,7 @@ type EInvoice struct {
 	StoreCode           string  `json:"storeCode"`
 	TotalDiscountAmount float64 `json:"totalDiscountAmount"`
 	TotalAmount         float64 `json:"totalAmount"`
+	NetAmountAmount     float64 `json:"netAmountAmount"`
 	TotalTax            float64 `json:"totalTax"`
 	StkTr01Serial       float64 `json:"stkTr01Serial"`
 	DateTimeIssued      string  `json:"dateTimeIssued"`

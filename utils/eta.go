@@ -47,9 +47,7 @@ func EtaLogin() (string, error) {
 func SignInvoices(invoices *[]model.Invoice) (*string, error) {
 	// var doc model.InvoiceSubmitResp
 	jsonValue, _ := json.Marshal(invoices)
-
 	url := fmt.Sprintf("%sSigner", config.Config("SIGNER_URL"))
-	fmt.Println(url)
 	resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonValue))
 	if err != nil {
 		return nil, err
@@ -59,13 +57,6 @@ func SignInvoices(invoices *[]model.Invoice) (*string, error) {
 		return nil, err
 	}
 	res := string(d)
-	fmt.Println(res)
-	// fmt.Println("d")
-	// fmt.Println(d)
-	// err = json.Unmarshal(d, &doc)
-	// if err != nil {
-	// 	return nil, err
-	// }
 	resp.Body.Close()
 	return &res, nil
 }

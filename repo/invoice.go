@@ -45,100 +45,6 @@ func roundFloat(val float64, precision uint) float64 {
 	ratio := math.Pow(10, float64(precision))
 	return math.Round(val*ratio) / ratio
 }
-
-// func (ur *InvoiceRepo) FindInvoiceData(req model.PostInvoicessRequest) error {
-
-// 	rows, err := ur.db.Raw("EXEC StkTrEInvoiceFind @serials = ? , @store = ? ", req.Serilas, req.Store).Rows()
-
-// 	// invoice.TotalSalesAmount = roundFloat(invoice.TotalSalesAmount, 5)
-// 	// invoice.TotalItemsDiscountAmount = roundFloat(invoice.TotalItemsDiscountAmount, 5)
-// 	// invoice.NetAmount = roundFloat(invoice.NetAmount, 5)
-// 	if utils.CheckErr(&err) {
-// 		return err
-// 	}
-// 	// var se string = strconv.FormatUint(*serial, 10)
-// 	// var st string = strconv.FormatUint(*serial, 10)
-// 	// invoice.InternalID = "IID" + se + st
-// 	// invoice.Receiver.Type = "P"
-
-// 	// err = ur.db.Raw("EXEC StkTrEInvoiceFindIssuerAddress  @storeCode = ? ", branchId).Row().Scan(
-// 	// 	&addressSerial,
-// 	// 	&invoice.Issuer.Address.Country,
-// 	// 	&invoice.Issuer.Address.Governate,
-// 	// 	&invoice.Issuer.Address.RegionCity,
-// 	// 	&invoice.Issuer.Address.Street,
-// 	// 	&invoice.Issuer.Address.BuildingNumber,
-// 	// )
-// 	// if utils.CheckErr(&err) {
-// 	// 	return err
-// 	// }
-// 	// rows, err := ur.db.Raw("EXEC StkTrEInvoiceFindItems  @serial = ? , @store = ? ", serial, store).Rows()
-// 	// if utils.CheckErr(&err) {
-// 	// 	return err
-// 	// }
-// 	defer rows.Close()
-
-// 	taxTotals := 0.0
-// 	for rows.Next() {
-// 		var line model.InvoiceLine
-// 		err = rows.Scan(
-// 			&line.ItemType,
-// 			&line.ItemCode,
-// 			&line.UnitType,
-// 			&line.Quantity,
-// 			&line.UnitValue.AmountEGP,
-// 			&line.ItemsDiscount,
-// 			&line.SalesTotal,
-// 			&line.Total,
-// 			&line.NetTotal,
-// 		)
-
-// 		line.Description = "description"
-// 		line.Total = roundFloat(line.Total, 5)
-// 		line.NetTotal = roundFloat(line.NetTotal, 5)
-// 		line.UnitValue.AmountEGP = roundFloat(line.UnitValue.AmountEGP, 5)
-// 		line.SalesTotal = roundFloat(line.SalesTotal, 5)
-// 		var itemTax model.TaxableItems
-// 		itemTax.Amount = roundFloat(line.SalesTotal*.14, 5)
-// 		itemTax.TaxType = "T1"
-// 		itemTax.SubType = " "
-// 		itemTax.Rate = 14.00
-// 		line.TaxableItems = append(line.TaxableItems, itemTax)
-
-// 		taxTotals += roundFloat(line.TaxableItems[0].Amount, 5)
-// 		if utils.CheckErr(&err) {
-// 			return err
-// 		}
-// 		line.UnitValue.CurrencySold = "EGP"
-// 		invoice.InvoiceLines = append(invoice.InvoiceLines, line)
-// 	}
-
-// 	var taxTotal model.TaxTotals
-
-// 	taxTotal.TaxType = "T1"
-// 	taxTotal.Amount = roundFloat(taxTotals, 5)
-// 	invoice.TaxTotals = append(invoice.TaxTotals, taxTotal)
-// 	// invoice.Issuer.Address.BranchId = "0"
-// 	return nil
-// }
-
-// type Invoice struct {
-// 	Issuer                   Issuer        `json:"issuer"`
-// 	Receiver                 Receiver      `json:"receiver"`
-// 	DocumentType             string        `json:"documentType"`
-// 	DocumentTypeVersion      string        `json:"documentTypeVersion"`
-// 	DateTimeIssued           string        `json:"dateTimeIssued"`
-// 	TaxpayerActivityCode     string        `json:"taxpayerActivityCode"`
-// 	InternalID               string        `json:"internalID"`
-// 	InvoiceLines             []InvoiceLine `json:"invoiceLines"`
-// 	TotalDiscountAmount      float64       `json:"totalDiscountAmount"`
-// 	TotalItemsDiscountAmount float64       `json:"totalItemsDiscountAmount"`
-// 	NetAmount                float64       `json:"netAmount"`
-// 	TotalSalesAmount         float64       `json:"totalSalesAmount"`
-// 	ExtraDiscountAmount      float64       `json:"extraDiscountAmount"`
-// 	TotalAmount              float64       `json:"totalAmount"`
-// 	TaxTotals                []TaxTotals   `json:"taxTotals"`
-// }
 func _removeTax(value *float64) float64 {
 	val := *value / 1.14
 	return _roundFloat(&val, 5)
@@ -246,6 +152,8 @@ func scanEInvoiceResult(rows *sql.Rows) (*[]model.EInvoice, error) {
 		if utils.CheckErr(&err) {
 			return nil, err
 		}
+		rec.TotalTax = rec.TotalAmount * .14
+		rec.NetAmountAmount = rec.TotalAmount - rec.TotalTax
 		resp = append(resp, rec)
 	}
 	return &resp, nil
