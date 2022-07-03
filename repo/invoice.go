@@ -51,7 +51,7 @@ func _removeTax(value *float64) float64 {
 }
 func _prepareInvoice(info *model.CompanyInfo, invoice *model.Invoice) {
 	invoice.Issuer.Id = info.EtaRegistrationId
-	internalID := fmt.Sprintf("%s-%d-%s", invoice.InternalID, invoice.Serial, invoice.Issuer.Address.BranchId)
+	internalID := fmt.Sprintf("%s-%d", invoice.InternalID, invoice.Serial)
 	invoice.InternalID = internalID
 	invoice.Issuer.Type = info.EtaType
 	invoice.TaxpayerActivityCode = info.EtaActivityCode
@@ -153,7 +153,9 @@ func scanEInvoiceResult(rows *sql.Rows) (*[]model.EInvoice, error) {
 			return nil, err
 		}
 		rec.TotalTax = rec.TotalAmount * .14
-		rec.NetAmountAmount = rec.TotalAmount - rec.TotalTax
+		rec.NetAmount = rec.TotalAmount - rec.TotalTax
+		internalID := fmt.Sprintf("%s-%d", rec.InternalID, rec.Serial)
+		rec.InternalID = internalID
 		resp = append(resp, rec)
 	}
 	return &resp, nil
