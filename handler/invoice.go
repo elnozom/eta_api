@@ -25,11 +25,65 @@ func (h *Handler) InvoicePost(c echo.Context) error {
 	if err := c.Bind(req); err != nil {
 		return c.JSON(http.StatusUnprocessableEntity, utils.NewError(err))
 	}
+	var log model.Log
+	var log2 model.Log
 	invoices, err := h.invoiceRepo.FindInvoiceData(req, h.companyInfo)
+	if utils.CheckErr(&err) {
+		log = model.Log{
+			InternalID:   "",
+			SubmissionID: "",
+			StoreCode:    req.Store,
+			Serials:      req.Serilas,
+			LogText:      "failed to create request on the golang application",
+			ErrText:      err.Error(),
+			Posted:       false,
+		}
+
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	log = model.Log{
+		InternalID:   "",
+		SubmissionID: "",
+		StoreCode:    req.Store,
+		Serials:      req.Serilas,
+		LogText:      "request generated on the golang application successfully",
+		ErrText:      "",
+		Posted:       true,
+	}
+	_, err = h.logRepo.ELogInsert(&log)
 	if utils.CheckErr(&err) {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-	utils.SignInvoices(invoices)
 
-	return c.JSON(http.StatusOK, invoices)
+	resp, err := utils.SignInvoices(&invoices)
+	if utils.CheckErr(&err) {
+		log2 = model.Log{
+			InternalID:   "",
+			SubmissionID: "",
+			StoreCode:    req.Store,
+			Serials:      req.Serilas,
+			LogText:      "failed to receive requests from dotnet to golang application",
+			ErrText:      err.Error(),
+			Posted:       false,
+		}
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	log2 = model.Log{
+		InternalID:   "",
+		SubmissionID: "",
+		StoreCode:    req.Store,
+		Serials:      req.Serilas,
+		LogText:      *resp,
+		ErrText:      "",
+		Posted:       false,
+	}
+	_, err = h.logRepo.ELogInsert(&log2)
+	if utils.CheckErr(&err) {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	// for i := 0; i < len(invoices); i++ {
+	// 	var invoice = invoices[i]
+	// 	_, err = h.invoiceRepo.EInvoicePost(&invoice.Serial, &invoice.Issuer.Address.BranchId)
+	// }
+	return c.JSON(http.StatusOK, *resp)
 }

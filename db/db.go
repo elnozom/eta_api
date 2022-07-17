@@ -13,6 +13,8 @@ var (
 )
 
 func New() (*gorm.DB, error) {
+	// conStr := fmt.Sprintf("host=%s port=1433 user=%s password=%s dbname=%s",
+	// 	config.Config("DB_HOST"), config.Config("DB_USER"), config.Config("DB_PASSWORD"), config.Config("DB_NAME"))
 	conStr := fmt.Sprintf("sqlserver://%s:%s@%s:1433?database=%s", config.Config("DB_USER"), config.Config("DB_PASSWORD"), config.Config("DB_HOST"), config.Config("DB_NAME"))
 	DB, err := gorm.Open("mssql", conStr)
 	if err != nil {

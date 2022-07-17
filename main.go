@@ -21,6 +21,7 @@ func main() {
 	invoiceRepo := repo.NewInvoiceRepo(db)
 	receiptRepo := repo.NewReceiptRepo(db)
 	storeRepo := repo.NewStoreRepo(db)
+	logRepo := repo.NewLogRepo(db)
 	companyRepo := repo.NewCompanyRepo(db)
 	companyInfo, err := companyRepo.Find()
 	if err != nil {
@@ -32,6 +33,7 @@ func main() {
 		invoiceRepo,
 		receiptRepo,
 		storeRepo,
+		logRepo,
 		companyInfo,
 	)
 	h.Register(v1)

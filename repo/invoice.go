@@ -20,6 +20,14 @@ func NewInvoiceRepo(db *gorm.DB) InvoiceRepo {
 	}
 }
 
+func (ur *InvoiceRepo) EInvoicePost(serial *int, etaStore *string) (*int, error) {
+	var resp int
+	err := ur.db.Raw("EXEC StkTrEInvoicePosted @serial = ? , @store = ?", serial, etaStore).Row().Scan(&resp)
+	if utils.CheckErr(&err) {
+		return nil, err
+	}
+	return &resp, nil
+}
 func (ur *InvoiceRepo) ListEInvoices(req *model.ListInvoicessRequest) (*[]model.EInvoice, error) {
 	rows, err := ur.db.Raw("EXEC StkTrEInvoiceHeadList @posted = ? , @store = ? , @start_date = ? , @end_date = ? ", req.Posted, req.Store, req.StartDate, req.EndDate).Rows()
 	utils.CheckErr(&err)
@@ -49,9 +57,9 @@ func _removeTax(value *float64) float64 {
 	val := *value / 1.14
 	return _roundFloat(&val, 5)
 }
-func _prepareInvoice(info *model.CompanyInfo, invoice *model.Invoice) {
+func _prepareInvoice(info *model.CompanyInfo, invoice *model.Invoice, storeCode *int) {
 	invoice.Issuer.Id = info.EtaRegistrationId
-	internalID := fmt.Sprintf("%s-%d", invoice.InternalID, invoice.Serial)
+	internalID := fmt.Sprintf("%d-%d", *storeCode, invoice.Serial)
 	invoice.InternalID = internalID
 	invoice.Issuer.Type = info.EtaType
 	invoice.TaxpayerActivityCode = info.EtaActivityCode
@@ -79,7 +87,7 @@ func _prepareInvoiceItem(item *model.InvoiceLine) {
 	item.TaxableItems = append(item.TaxableItems, tax)
 	// item.UnitValue.TaxableItems.Ta = "EGP"
 }
-func (ur *InvoiceRepo) FindInvoiceData(req *model.PostInvoicessRequest, companyInfo *model.CompanyInfo) (*[]model.Invoice, error) {
+func (ur *InvoiceRepo) FindInvoiceData(req *model.PostInvoicessRequest, companyInfo *model.CompanyInfo) ([]model.Invoice, error) {
 	var invoices []model.Invoice
 	// var invoicesLines []model.InvoiceItem
 	rows, err := ur.db.Raw("EXEC StkTrEInvoiceFind @serials = ? , @store = ? ", req.Serilas, req.Store).Rows()
@@ -105,7 +113,7 @@ func (ur *InvoiceRepo) FindInvoiceData(req *model.PostInvoicessRequest, companyI
 		if utils.CheckErr(&err) {
 			return nil, err
 		}
-		_prepareInvoice(companyInfo, &rec)
+		_prepareInvoice(companyInfo, &rec, &req.Store)
 		invoices = append(invoices, rec)
 	}
 	err = ur.db.ScanRows(rows, &invoices)
@@ -142,7 +150,7 @@ func (ur *InvoiceRepo) FindInvoiceData(req *model.PostInvoicessRequest, companyI
 			invoices[counter].TaxTotals[0].Amount = _roundFloat(&invoices[counter].TaxTotals[0].Amount, 5)
 		}
 	}
-	return &invoices, nil
+	return invoices, nil
 }
 func scanEInvoiceResult(rows *sql.Rows) (*[]model.EInvoice, error) {
 	var resp []model.EInvoice
