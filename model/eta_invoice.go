@@ -151,11 +151,16 @@ type InvoiceSubmitRequest struct {
 }
 
 type InvoiceSubmitResp struct {
-	SubmissionId      string   `json:"submissionId"`
-	AcceptedDocuments []string `json:"acceptedDocuments"`
-	RejectedDocuments []string `json:"rejectedDocuments"`
+	SubmissionId      string              `json:"submissionId"`
+	AcceptedDocuments []AcceptedDocuments `json:"acceptedDocuments"`
+	RejectedDocuments []AcceptedDocuments `json:"rejectedDocuments"`
 }
-
+type AcceptedDocuments struct {
+	UUID       string `json:"uuid"`
+	LongId     string `json:"longId"`
+	InternalId string `json:"internalId"`
+	HashKey    string `json:"hashKey"`
+}
 type InvoiceFindResp struct {
 	Serial                   int
 	DateTimeIssued           string

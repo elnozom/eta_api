@@ -20,9 +20,9 @@ func NewInvoiceRepo(db *gorm.DB) InvoiceRepo {
 	}
 }
 
-func (ur *InvoiceRepo) EInvoicePost(serial *int, etaStore *string) (*int, error) {
+func (ur *InvoiceRepo) EInvoicePost(serial *int, etaStore *int, uuid *string) (*int, error) {
 	var resp int
-	err := ur.db.Raw("EXEC StkTrEInvoicePosted @serial = ? , @store = ?", serial, etaStore).Row().Scan(&resp)
+	err := ur.db.Raw("EXEC StkTrEInvoicePosted @serial = ? , @store = ? , @uuid = ? ", serial, etaStore, uuid).Row().Scan(&resp)
 	if utils.CheckErr(&err) {
 		return nil, err
 	}
