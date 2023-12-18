@@ -3,7 +3,6 @@ package utils
 import (
 	"bytes"
 	"encoding/json"
-	"eta/config"
 	"eta/model"
 	"fmt"
 	"io/ioutil"
@@ -44,10 +43,10 @@ func EtaLogin() (string, error) {
 	return response.AccessToken, nil
 }
 
-func SignInvoices(invoices *[]model.Invoice) (*string, error) {
+func SignInvoices(invoices *[]model.Invoice, signerUrl string) (*string, error) {
 	// var doc model.InvoiceSubmitResp
 	jsonValue, _ := json.Marshal(invoices)
-	url := fmt.Sprintf("%sSigner", config.Config("SIGNER_URL"))
+	url := fmt.Sprintf("%s/Signer", signerUrl)
 	resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonValue))
 	if err != nil {
 		return nil, err
