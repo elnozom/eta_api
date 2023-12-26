@@ -16,3 +16,6 @@ dball:
 	mysql -u root -h 127.0.0.1 --password=secret < db/db.sql && \
 	mysql -u root -h 127.0.0.1 --password=secret < db/seed.sql && \
 	mysql -u root -h 127.0.0.1 --password=secret < db/proc.sql 
+
+run: 
+	go run main.go

@@ -30,7 +30,8 @@ func (h *Handler) Register(v1 *echo.Group) {
 	// receipt routes
 	receipt := api.Group("/receipts")
 	receipt.GET("", h.ReceiptsListByPosted)
-	receipt.POST("/post/:serial", h.ReceiptPost)
+	receipt.POST("/post", h.ReceiptPost)
+	receipt.POST("/gen", h.ToUUID)
 
 	// global
 	api.POST("/upload", h.Upload)

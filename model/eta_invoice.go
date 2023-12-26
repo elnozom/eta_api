@@ -14,6 +14,9 @@ type ListInvoicessRequest struct {
 	Store     *int    `query:"store"`
 }
 
+type ToUUDRequest struct {
+	Invoice string `json:"invoice"`
+}
 type PostInvoicessRequest struct {
 	Serilas string `json:"serials"`
 	Store   int    `query:"store"`
@@ -27,18 +30,18 @@ type Issuer struct {
 }
 
 type TaxableItems struct {
-	TaxType string  `json:"taxType"`
-	Amount  float64 `json:"amount"`
-	SubType string  `json:"subType"`
-	Rate    float64 `json:"rate"`
+	TaxType string  `json:"taxType" jsonorder:"1"`
+	Amount  float64 `json:"amount" jsonorder:"2"`
+	SubType string  `json:"subType" jsonorder:"3"`
+	Rate    float64 `json:"rate" jsonorder:"4"`
 }
 
 type ReceiverAddress struct {
-	Country        string `json:"country"`
-	Governate      string `json:"governate"`
-	RegionCity     string `json:"regionCity"`
-	Street         string `json:"street"`
-	BuildingNumber string `json:"buildingNumber"`
+	Country        string `json:"country" jsonorder:"1"`
+	Governate      string `json:"governate" jsonorder:"2"`
+	RegionCity     string `json:"regionCity" jsonorder:"3"`
+	Street         string `json:"street" jsonorder:"4"`
+	BuildingNumber string `json:"buildingNumber" jsonorder:"5"`
 }
 type IssuerAddress struct {
 	BranchId       string `json:"branchId"`

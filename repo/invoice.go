@@ -6,6 +6,7 @@ import (
 	"eta/utils"
 	"fmt"
 	"math"
+	"time"
 
 	"github.com/jinzhu/gorm"
 )
@@ -87,6 +88,22 @@ func _prepareInvoiceItem(item *model.InvoiceLine) {
 	item.TaxableItems = append(item.TaxableItems, tax)
 	// item.UnitValue.TaxableItems.Ta = "EGP"
 }
+
+func fixDate(originalTimestamp string) string {
+
+	// Parse the original timestamp
+	parsedTime, err := time.Parse(time.RFC3339, originalTimestamp)
+	if err != nil {
+		fmt.Println("Error parsing timestamp:", err)
+		return ""
+	}
+
+	// Format the timestamp without fractional seconds
+	adjustedTimestamp := parsedTime.Format("2006-01-02T15:04:05Z")
+
+	return adjustedTimestamp
+
+}
 func (ur *InvoiceRepo) FindInvoiceData(req *model.PostInvoicessRequest, companyInfo *model.CompanyInfo) ([]model.Invoice, error) {
 	var invoices []model.Invoice
 	// var invoicesLines []model.InvoiceItem
@@ -110,6 +127,7 @@ func (ur *InvoiceRepo) FindInvoiceData(req *model.PostInvoicessRequest, companyI
 			&rec.Issuer.Address.Street,
 			&rec.Issuer.Address.BuildingNumber,
 		)
+
 		if utils.CheckErr(&err) {
 			return nil, err
 		}
