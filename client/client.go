@@ -9,7 +9,10 @@ import (
 
 type ApiClientInterface interface {
 	SetAccessToken(token string)
-	Login() (*model.EtaLoginResponse, error)
+
+	Login(req model.EtaAuthunticatePOSRequest) (*model.EtaLoginResponse, error)
+	GenerateUUID(req model.Receipt) (*model.GenerateUUIDResponse, error)
+	SubmitReceitps(loginReq model.EtaAuthunticatePOSRequest, req model.ReceiptSubmitRequest) (*model.InvoiceSubmitResp, error)
 	// Login() (*types.LoginResponse, error)
 	// DoProccessPaymentReuest(req types.ProccessPaymentRequest, token string) (*req.Response, *types.ProccessPaymentResponse, *ErrorResponse)
 	// DecorateProcessPaymentRequest(req *types.ProccessPaymentRequest)

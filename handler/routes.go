@@ -31,7 +31,7 @@ func (h *Handler) Register(v1 *echo.Group) {
 	receipt := api.Group("/receipts")
 	receipt.GET("", h.ReceiptsListByPosted)
 	receipt.POST("/post", h.ReceiptPost)
-	receipt.POST("/gen", h.ToUUID)
+	receipt.POST("/uuid", h.GenerateUUID)
 
 	// global
 	api.POST("/upload", h.Upload)

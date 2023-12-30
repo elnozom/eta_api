@@ -59,3 +59,29 @@ type ItemData struct {
 	TotalSale    float64        `json:"totalSale"`
 	Total        float64        `json:"total"`
 }
+
+type GenerateUUIDResponse struct {
+	Uuid    string  `json:"uuid"`
+	Receipt Receipt `json:"updatedReceiptJson"`
+}
+
+// type SubmitReceiptResponse struct {
+// 	Uuid    string  `json:"uuid"`
+// 	Receipt Receipt `json:"updatedReceiptJson"`
+// }
+
+type ReceiptUpdateRequest struct {
+	Serial      int    `json:"serial"`
+	Uuid        string `json:"uuid"`
+	Posted      bool   `json:"posted"`
+	RequestBody string `json:"requestBody"`
+}
+
+type GenerateUUIDRequest struct {
+	Serial int `json:"serial"`
+	Store  int `json:"store"`
+}
+type UnpostedReceipts struct {
+	Serial      int     `json:"serial"`
+	RequestBody Receipt `json:"request_body"`
+}

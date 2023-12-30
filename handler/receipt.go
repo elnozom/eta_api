@@ -1,12 +1,11 @@
 package handler
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
+	"encoding/json"
 	"eta/model"
 	"eta/utils"
-	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
@@ -40,70 +39,112 @@ func (h *Handler) ReceiptsListByPosted(c echo.Context) error {
 
 //		return c.JSON(http.StatusOK, receipt)
 //	}
-func (h *Handler) ToUUID(c echo.Context) error {
-	req := new(model.ToUUDRequest)
+func (h *Handler) GenerateUUID(c echo.Context) error {
+	req := new(model.GenerateUUIDRequest)
 	if err := c.Bind(req); err != nil {
 		return c.JSON(http.StatusUnprocessableEntity, utils.NewError(err))
 	}
-	hash := sha256.New()
-	hash.Write([]byte(req.Invoice))
-	hashValue := hash.Sum(nil)
-	// reciept.Header.ReferenceUUID = strings.ReplaceAll(hashString, "n", "s")
-	log.Debug().Interface("string", req.Invoice).Msg("vanon")
-
-	// Convert the hash value from an array of 32 bytes to a hexadecimal string
-	hashString := hex.EncodeToString(hashValue)
-
-	// reciept.Header.ReferenceUUID = "fb6caa0bf99bc1582de1df29b7db6d287ba5c7238cb6e980ca7c7c061035308d"
-	return c.JSON(http.StatusInternalServerError, hashString)
-}
-func (h *Handler) ReceiptPost(c echo.Context) error {
-	req := new(model.PostInvoicessRequest)
-	if err := c.Bind(req); err != nil {
-		return c.JSON(http.StatusUnprocessableEntity, utils.NewError(err))
+	strSerial := strconv.Itoa(req.Serial)
+	logReq := model.Log{
+		InternalID:   "",
+		SubmissionID: "",
+		StoreCode:    req.Store,
+		Serials:      strSerial,
+		LogText:      "",
+		ErrText:      "",
+		Posted:       false,
 	}
-	reciept, err := h.receiptRepo.FindReceiptData(req, h.companyInfo)
+
+	reciept, loginReq, serial, err := h.receiptRepo.FindReceiptData(req, h.companyInfo)
 	if utils.CheckErr(&err) {
-
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-	// var jsonData map[string]interface{}
 
-	// receipt :=
-	// request := model.ReceiptSubmitRequest{
-	// 	Receipts: []model.Receipt{*reciept},
+	logReq.InternalID = reciept.Header.ReceiptNumber
+
+	resp, err := h.apiClient.GenerateUUID(*reciept)
+	if utils.CheckErr(&err) {
+		logReq.LogText = "failed to generate uuid"
+		logReq.ErrText = err.Error()
+		_, err = h.logRepo.ELogInsert(&logReq)
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	body := model.ReceiptSubmitRequest{
+		Receipts: []model.Receipt{resp.Receipt},
+	}
+
+	submitResp, err := h.apiClient.SubmitReceitps(*loginReq, body)
+	if utils.CheckErr(&err) {
+		logReq.LogText = "failed to submit receipts"
+		logReq.ErrText = err.Error()
+		_, err = h.logRepo.ELogInsert(&logReq)
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	mJsong, _ := json.Marshal(resp.Receipt)
+	updateReq := model.ReceiptUpdateRequest{
+		Serial:      serial,
+		RequestBody: string(mJsong),
+		Posted:      false,
+		Uuid:        resp.Uuid,
+	}
+	if len(submitResp.AcceptedDocuments) > 0 {
+		updateReq.Posted = true
+	}
+	err = h.receiptRepo.ReceiptUpdate(updateReq)
+	if utils.CheckErr(&err) {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	logReq.LogText = "success"
+	logReq.SubmissionID = submitResp.SubmissionId
+	_, err = h.logRepo.ELogInsert(&logReq)
+
+	log.Debug().Interface("submit", submitResp).Msg("submitted invoices")
+	return c.JSON(http.StatusOK, resp.Uuid)
+}
+func (h *Handler) ReceiptPost(c echo.Context) error {
+	// _, body, err := h.receiptRepo.EInvoiceListUnposted()
+	// if utils.CheckErr(&err) {
+	// 	return c.JSON(http.StatusInternalServerError, err.Error())
+	// }
+	// resp, err := h.apiClient.SubmitReceitps(*body)
+	// if utils.CheckErr(&err) {
+	// 	return c.JSON(http.StatusInternalServerError, err.Error())
 	// }
 
-	// mJson, _ := json.Marshal(reciept)
-	canonicalString := utils.Serialize(*reciept)
-	// err = json.Unmarshal(mJson, &jsonData)
-	if err != nil {
-		fmt.Println("Error:", err)
-		return err
-	}
-	// canonicalString = strings.ReplaceAll(canonicalString, "\"\"\"", "\"\"")
-	// canonicalString = strings.ReplaceAll(canonicalString, ",", "")
-	// canonicalString = strings.ReplaceAll(canonicalString, ":", "")
-	// canonicalString = strings.ReplaceAll(canonicalString, "{", "")
-	// canonicalString = strings.ReplaceAll(canonicalString, "}", "")
-	// log.Debug().Interface("holholholaaa", reciept).Msg("req")
-	hash := sha256.New()
-	hash.Write([]byte(canonicalString))
-	hashValue := hash.Sum(nil)
-	// reciept.Header.ReferenceUUID = strings.ReplaceAll(hashString, "n", "s")
+	// postedUUIDs := []string{}
+	// if len(resp.AcceptedDocuments) > 0 {
+	// 	for _, v := range resp.AcceptedDocuments {
+	// 		postedUUIDs = append(postedUUIDs, v.UUID)
+	// 	}
+	// }
 
-	// Convert the hash value from an array of 32 bytes to a hexadecimal string
-	hashString := hex.EncodeToString(hashValue)
-	log.Debug().Interface("hast", hashString).Interface("canonicalString", canonicalString).Msg("vanocanonicalString")
+	// req := new(model.PostInvoicessRequest)
+	// if err := c.Bind(req); err != nil {
+	// 	return c.JSON(http.StatusUnprocessableEntity, utils.NewError(err))
+	// }
+	// reciept, serial, err := h.receiptRepo.FindReceiptData(req, h.companyInfo)
+	// if utils.CheckErr(&err) {
 
-	// reciept.Header.Uuid = hashString
-	// log.Debug().Interface("mapValue", mapValue).Msg("vanomapValue")
-	// log.Debug().Interface("hashString", hashString).Msg("vanohashString")
+	// 	return c.JSON(http.StatusInternalServerError, err.Error())
+	// }
 
-	// reciept.Header.ReferenceUUID = "fb6caa0bf99bc1582de1df29b7db6d287ba5c7238cb6e980ca7c7c061035308d"
-	// reciept["Header"].(map[string]interface{})["Uuid"] = hashString
+	// resp, err := h.apiClient.GenerateUUID(*reciept)
+	// if utils.CheckErr(&err) {
+	// 	return c.JSON(http.StatusInternalServerError, err.Error())
+	// }
+	// mJsong, _ := json.Marshal(resp.Receipt)
+	// updateReq := model.ReceiptUpdateRequest{
+	// 	Serial:      serial,
+	// 	RequestBody: string(mJsong),
+	// 	Uuid:        resp.Uuid,
+	// }
+	// err = h.receiptRepo.ReceiptUpdate(updateReq)
+	// if utils.CheckErr(&err) {
 
-	// canonicalJSON := toCanonicalJSON(jsonData, "")
+	// 	return c.JSON(http.StatusInternalServerError, err.Error())
+	// }
+	return c.JSON(http.StatusOK, "resp")
 
-	return c.JSON(http.StatusOK, map[string]interface{}{"receipts": []interface{}{*reciept}})
 }

@@ -42,6 +42,7 @@ type Config struct {
 	POSClientID       string `mapstructure:"POS_CLIENT_ID"`
 	POSClientSecret   string `mapstructure:"POS_CLIENT_SECRET"`
 	SignerUrl         string `mapstructure:"SIGNER_URL"`
+	ToolkitApiUrl     string `mapstructure:"TOOLIKIT_API_URL"`
 	AuthApiUrl        string `mapstructure:"AUTH_API_URL"`
 	SubmitApiUrl      string `mapstructure:"SUBMIT_API_URL"`
 	PosSerial         string `mapstructure:"POS_SERIAL"`

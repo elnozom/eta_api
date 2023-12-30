@@ -26,8 +26,8 @@ func main() {
 	}
 	apiClient := client.NewApiClient(&config)
 
-	resp, err := apiClient.Login()
-	log.Debug().Interface("test", resp).Msg("hola")
+	// resp, err := apiClient.Login()
+	// log.Debug().Interface("test", resp).Msg("hola")
 
 	// store, err := db.InitDB(ctx, config.DBSource)
 	// if err != nil {
@@ -57,6 +57,7 @@ func main() {
 		storeRepo,
 		logRepo,
 		companyInfo,
+		apiClient,
 	)
 	h.Register(v1)
 	port := fmt.Sprintf(":%s", config.Port)

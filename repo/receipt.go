@@ -1,9 +1,11 @@
 package repo
 
 import (
+	"encoding/json"
 	"eta/model"
 	"eta/utils"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/jinzhu/gorm"
@@ -30,6 +32,53 @@ func (ur *ReceiptRepo) ListReceiptsByPosted(posted *bool) (*[]model.EInvoice, er
 	return result, nil
 }
 
+func (ur *ReceiptRepo) EInvoiceListUnposted() ([]model.UnpostedReceipts, *model.ReceiptSubmitRequest, error) {
+	var resp []model.UnpostedReceipts
+	rows, err := ur.db.Raw("EXEC StkTrEInvoiceListUnpostedReceipts").Rows()
+	if utils.CheckErr(&err) {
+		return nil, nil, err
+	}
+	defer rows.Close()
+	var body model.ReceiptSubmitRequest
+	var receipts []model.Receipt
+	for rows.Next() {
+		var rec model.UnpostedReceipts
+		var receipt model.Receipt
+		var reqBody string
+		err := rows.Scan(
+			&rec.Serial,
+			&reqBody,
+		)
+
+		if utils.CheckErr(&err) {
+			return nil, &body, err
+		}
+
+		err = json.Unmarshal([]byte(reqBody), &receipt)
+		if utils.CheckErr(&err) {
+			return nil, &body, err
+		}
+		rec.RequestBody = receipt
+		receipts = append(receipts, rec.RequestBody)
+
+		resp = append(resp, rec)
+	}
+	body = model.ReceiptSubmitRequest{
+		Receipts: receipts,
+	}
+	return resp, &body, nil
+}
+func (ur *ReceiptRepo) ReceiptUpdate(req model.ReceiptUpdateRequest) error {
+	rows, err := ur.db.Raw("EXEC StkTrEInvoiceHeadUpdate @Serial = ?,@requestBody =?  , @uuid = ? , @posted = ? ", req.Serial, req.RequestBody, req.Uuid, req.Posted).Rows()
+	if utils.CheckErr(&err) {
+		return err
+	}
+	defer rows.Close()
+	if utils.CheckErr(&err) {
+		return err
+	}
+	return nil
+}
 func _prepareReceipt(info *model.CompanyInfo, serial int, receipt *model.Receipt, storeCode *int) {
 	receipt.Seller.Rin = info.EtaRegistrationId
 	internalID := fmt.Sprintf("%d-%d", *storeCode, serial)
@@ -51,7 +100,7 @@ func _prepareReceipt(info *model.CompanyInfo, serial int, receipt *model.Receipt
 	receipt.TotalSales = receipt.NetAmount
 
 }
-func (ur *ReceiptRepo) FindReceiptData(req *model.PostInvoicessRequest, companyInfo *model.CompanyInfo) (*model.Receipt, error) {
+func (ur *ReceiptRepo) FindReceiptData(req *model.GenerateUUIDRequest, companyInfo *model.CompanyInfo) (*model.Receipt, *model.EtaAuthunticatePOSRequest, int, error) {
 	var serial int
 	// var internalId string
 	var clientId string
@@ -59,10 +108,11 @@ func (ur *ReceiptRepo) FindReceiptData(req *model.PostInvoicessRequest, companyI
 	var totalTax float32
 
 	// var addressSerial int
-	rows, err := ur.db.Raw("EXEC StkTrEInvoiceFind @serials = ? , @store = ? ", req.Serilas, req.Store).Rows()
+	strSerial := strconv.Itoa(req.Serial)
+	rows, err := ur.db.Raw("EXEC StkTrEInvoiceFind @serials = ? , @store = ? ", strSerial, req.Store).Rows()
 
 	if utils.CheckErr(&err) {
-		return nil, err
+		return nil, nil, serial, err
 	}
 	var reciept model.Receipt
 	for rows.Next() {
@@ -86,7 +136,7 @@ func (ur *ReceiptRepo) FindReceiptData(req *model.PostInvoicessRequest, companyI
 			&clientSecret,
 		)
 		if utils.CheckErr(&err) {
-			return nil, err
+			return nil, nil, serial, err
 		}
 
 		reciept.Header.DateTimeIssued = fixDate(reciept.Header.DateTimeIssued)
@@ -129,84 +179,20 @@ func (ur *ReceiptRepo) FindReceiptData(req *model.PostInvoicessRequest, companyI
 			rec.ItemType = strings.ReplaceAll(rec.ItemType, " ", "")
 			rec.TaxableItems = taxItems
 			rec.InternalCode = rec.ItemCode
-			// _prepareInvoiceItem(&rec)
 			if utils.CheckErr(&err) {
-				return nil, err
+				return nil, nil, serial, err
 			}
 			reciept.ItemData = append(reciept.ItemData, rec)
-			// if invoices[counter].Serial != headSerial {
-			// 	counter++
-			// }
-			// invoices[counter].InvoiceLines = append(invoices[counter].InvoiceLines, rec)
-			// invoices[counter].TaxTotals[0].Amount += rec.TaxableItems[0].Amount
-			// invoices[counter].TaxTotals[0].Amount = _roundFloat(&invoices[counter].TaxTotals[0].Amount, 5)
+
 		}
 	}
-	return &reciept, nil
+
+	loginRequest := model.EtaAuthunticatePOSRequest{
+		ClientId:     clientId,
+		ClientSecret: clientSecret,
+		PosOsVersion: "os",
+		PosSerial:    reciept.Seller.DeviceSerialNumber,
+		Presharedkey: "",
+	}
+	return &reciept, &loginRequest, serial, nil
 }
-
-// func (ur *InvoiceRepo) FindInvoiceData(req *model.PostInvoicessRequest, companyInfo *model.CompanyInfo) ([]model.Invoice, error) {
-// 	var invoices []model.Invoice
-// 	// var invoicesLines []model.InvoiceItem
-// 	rows, err := ur.db.Raw("EXEC StkTrEInvoiceFind @serials = ? , @store = ? ", req.Serilas, req.Store).Rows()
-// 	if utils.CheckErr(&err) {
-// 		return nil, err
-// 	}
-// 	defer rows.Close()
-// 	for rows.Next() {
-// 		var rec model.Invoice
-// 		err := rows.Scan(
-// 			&rec.Serial,
-// 			&rec.DateTimeIssued,
-// 			&rec.InternalID,
-// 			&rec.TotalDiscountAmount,
-// 			&rec.TotalAmount,
-// 			&rec.Issuer.Address.BranchId,
-// 			&rec.Issuer.Address.Country,
-// 			&rec.Issuer.Address.Governate,
-// 			&rec.Issuer.Address.RegionCity,
-// 			&rec.Issuer.Address.Street,
-// 			&rec.Issuer.Address.BuildingNumber,
-// 		)
-// 		if utils.CheckErr(&err) {
-// 			return nil, err
-// 		}
-// 		_prepareInvoice(companyInfo, &rec, &req.Store)
-// 		invoices = append(invoices, rec)
-// 	}
-// 	err = ur.db.ScanRows(rows, &invoices)
-// 	if rows.NextResultSet() {
-// 		var headSerial int
-// 		var counter int
-
-// 		// currentInvoice := invoices[counter]
-// 		for rows.Next() {
-// 			var rec model.InvoiceLine
-// 			// var head int
-// 			err := rows.Scan(
-// 				&headSerial,
-// 				&rec.Description,
-// 				&rec.ItemType,
-// 				&rec.ItemCode,
-// 				&rec.UnitType,
-// 				&rec.Quantity,
-// 				&rec.UnitValue.AmountEGP,
-// 				&rec.ItemsDiscount,
-// 				&rec.SalesTotal,
-// 				&rec.Total,
-// 			)
-// 			_prepareInvoiceItem(&rec)
-// 			if utils.CheckErr(&err) {
-// 				return nil, err
-// 			}
-
-// 			if invoices[counter].Serial != headSerial {
-// 				counter++
-// 			}
-// 			invoices[counter].InvoiceLines = append(invoices[counter].InvoiceLines, rec)
-// 			invoices[counter].TaxTotals[0].Amount += rec.TaxableItems[0].Amount
-// 			invoices[counter].TaxTotals[0].Amount = _roundFloat(&invoices[counter].TaxTotals[0].Amount, 5)
-// 		}
-// 	}
-// 	return invoices, nil
-// }
